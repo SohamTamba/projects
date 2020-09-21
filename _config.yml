@@ -1,17 +1,17 @@
 # Jekyll configuration
 
 name: Soham Tamba
-description: GSoC 2018
+description: My Projects
 
 # url is currently only used only for the RSS feed in feed.xml
-url: https://github.com/SohamTamba/GSoC
+url: https://github.com/SohamTamba/projects
 google_analytics: UA-133714939-2
 
 # baseurl will often be '', but for a project page on gh-pages, it needs to
 # be the project name.
 # *** IMPORTANT: If your local "jekyll serve" throws errors change this to '' or
 #     run it like so: jekyll serve --baseurl=''
-baseurl: '/GSoC'
+baseurl: '/projects'
 ## default date_format
 date_format: 
   title: "%B-%-d-%Y"
