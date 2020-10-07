@@ -129,7 +129,7 @@ We decided to use self-supervised learning **(SSL)** to train an image encoder. 
 We intentionally chose to avoid using the state-of-the-art contrastive SSL techniques - such as MoCo and SimCLR - because the contrastive loss requires a **HUGE** amount of negative samples. Due to time constraints and limited computational resources, we chose not to risk using such a time consuming SSL technique.
 
 
- We used the ResNet-18 architecture due to the limited data.  However, after reading the landmark [ResNet paper](https://arxiv.org/abs/1512.03385), I realised this was a mistake because the depth of the network contributes very little to overfitting: ResNets overfit on ImageNet only when 1,000 layers are used. So we should have explored the possibility of using ResNet-50 and ResNet-34 as the image encoder.
+ We used the ResNet-18 architecture due to the limited data.  However, after reading the landmark [ResNet paper](https://arxiv.org/abs/1512.03385), I realised this was a mistake because the depth of the network contributes very little to overfitting: ResNets overfit on ImageNet only when 1,202 layers are used. So we should have explored the possibility of using ResNet-50 and ResNet-34 as the image encoder.
 
 <br>
 
