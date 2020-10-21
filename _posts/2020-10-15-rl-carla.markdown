@@ -1,0 +1,16 @@
+---
+layout: post
+title:  "CARLA Autonomous Driving Challenge (In Progress)"
+date:   2020-10-15 14:10:51 +0800
+categories: Deep-Learning
+mathjax: true
+tags: Autonomous-Vehicles Computer-Vision Reinforcement-Learning Deep-Learning Machine-Learning Pytorch Python Unsupervised-Learning Self-supervised-Learning
+description: The CARLA Autonomous Driving Challenge 2020 is organized as part of the Machine Learning for Autonomous Driving Workshop at NeurIPS 2020. It involves training an autonomous agent to drive a car in a variety of traffic situations. This is my project for NYU's Deep Reinforcement Learning course, taught by Prof. Lerrel Pinto (<i>NYU</i>). This post will be updated after the course project deadline, which is 11<sup>th</sup> December, 2020.
+---
+
+
+During the Fall of 2020, I was enrolled in NYU's *Deep Reinforcement Learning course*, taught by Prof. *Lerrel Pinto*. For my course project, I chose to work on the CARLA Autonomous Driving Challenge, which involves training an autonomous agent to drive a car in a variety of traffic situations, in the CARLA simulator. The agent is provided low level inputs such as images taken from a camera on the car, and high level instructions, such as "turn left at longitude 40 and lattitude 30". The agent must use this input navigate from its starting point to a pre-determined end-point. The competition is organized by Neurips. More details about the challenge can be found [`here`](https://leaderboard.carla.org/challenge/).
+
+We will be focusing on generating a good representation of the low level input.
+
+This post will be updated after the course project deadline on 11<sup>th</sup> December.

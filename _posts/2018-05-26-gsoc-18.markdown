@@ -13,6 +13,6 @@ During the summer of 2018, I participated as a Student Software Developer in Goo
 * Merged 2,500 lines of code into the LightGraphs codebase
 
 
-A summary of my results were published in Julia's official blog and can be found [here](https://julialang.org/blog/2019/02/light-graphs/).
+A summary of my results were published in Julia's official blog and can be found [`here`](https://julialang.org/blog/2019/02/light-graphs/)
 
-Details of the project can be found [here](https://sohamtamba.github.io/GSoC).
+Details of the project can be found [`here`](https://sohamtamba.github.io/GSoC)
