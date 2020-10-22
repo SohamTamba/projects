@@ -25,6 +25,15 @@ td{
 }
 </style>
 
+
+<font size="+3"><b>Table of Content</b></font>
+
+* TOC
+{:toc}
+
+___
+___
+
 # Introduction
 
 **Unsupervised pretraining technqiues can be used to leverage unannotated data to improve a neural network's ability to solve a task**. One way to achieve this is self-supervised learning (SSL), wherein a network is trained to solve a upstream task, whose annotations can be generated automatically. The hidden layers of this network is then used as a feature extractor to solve an unrelated downstream task. This is similar to *tranfer learning*, wherein a neural network trained to solve a supervised task - say ImageNet - is then finetuned to solve an unrelated downstream task - say COCO. An example of an upstream task is Jigsaw, wherein an image is divided into a grid of sub-images, and the sub-images are shuffled. The network then has to predict the original order of the shuffling.
@@ -47,7 +56,7 @@ All projects were conducted in a team of 2 students. **We investigated whether p
 
 ___
 ___
-# Logic
+# Method and Logic
 
 Presently, *supervised pretraining outperforms unsupervised pretraining*. For example, consider the ImageNet dataset; A network pretained on ImageNet images and ImageNet annotations significantly outperforms a network pretrained on the ImageNet images to solve the Rotation Prediction pretext task. It is argued that this is due to the current pretext tasks being *relatively easy* to solve, so the network can solve it without developing useful representations of the input. The state-of-the-art pretext task (on some common downstream tasks) at the time was *Image Rotation*: An image is rotated by some angle and the network is trained to guess the rotation angle. 
 
@@ -191,7 +200,9 @@ However, the improvement in performance was not as significant as were hoping fo
 ___
 ___
 
-**Update on 20th July 2020:** It has been found that adversarial noise improves the feature extractor obtained from pretraining a model on ImageNet. Coincidentally, the findings were published by the professor I mentioned in the logic section. The work can be found [here](https://gradientscience.org/transfer-learning/).
+# Updates
+
+**20th July 2020:** It has been found that adversarial noise improves the feature extractor obtained from pretraining a model on ImageNet. Coincidentally, the findings were published by the professor I mentioned in the logic section. The work can be found [`here`](https://gradientscience.org/transfer-learning/).
 
 ___
 ___

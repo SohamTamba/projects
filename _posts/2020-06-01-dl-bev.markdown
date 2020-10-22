@@ -8,6 +8,15 @@ tags: Autonomous-Vehicles Computer-Vision Deep-Learning Machine-Learning Pytorch
 description: I tackled the problem of Bird's Eye View Prediction - a crucial task for <b>autonomous vehicles</b> - with very little annotated data, and a moderate amount of unannotated data. This was my project for NYU's Deep Learning course, taught by Prof. Yann Lecun (<i>Facebook AI Research</i>, <i>NYU</i>) and Prof. Alfredo Canziani (<i>NYU</i>).
 ---
 
+
+<font size="+3"><b>Table of Content</b></font>
+
+* TOC
+{:toc}
+
+___
+___
+
 # Introduction
 
 **Autonomous vehicles need to estimate its surroundings to plan a safe and efficient route to its destination. The task of Bird's Eye View Prediction involves generating a segmentation map of the road and bounding boxes around certain objects - such as cars - as seen from a helicopter above the car.**
@@ -113,7 +122,7 @@ The model is divided into 5 sub-models:
 
 ### Image Encoder
 
-We decided to use self-supervised learning **(SSL)** to train an image encoder. The image encoder is used to generate a more meaningful representation of the 6 input images. We decided to train the encoder on the jigsaw pretext task. The motivation behind this decision is that the target of the downstream task (Bird's Eye View Prediction) is sensitive to the patch-shuffling transformation of jigsaw. For example, if a portion of an image in which a road is present, is moved from the left half of an image to the right half of an image then the target road segmentation mask will also change. **Hence, the feature extractor obtained from jigsaw pretraining, whose image representations are covariate to this shuffling transform, might be useful for this task**.
+We decided to use self-supervised learning **(SSL)** to pre-train an image encoder. The image encoder is used to generate a more meaningful representation of the 6 input images. We decided to train the encoder on the jigsaw pretext task. The motivation behind this decision is that the target of the downstream task (Bird's Eye View Prediction) is sensitive to the patch-shuffling transformation of jigsaw. **Hence, the feature extractor obtained from jigsaw pretraining - whose image representations are covariate to this shuffling transform - might be useful for this task**.
 
 <br>
 
@@ -126,10 +135,10 @@ We decided to use self-supervised learning **(SSL)** to train an image encoder. 
 
 <br>
 
-We intentionally chose to avoid using the state-of-the-art contrastive SSL techniques - such as MoCo and SimCLR - because the contrastive loss requires a **HUGE** amount of negative samples. Due to time constraints and limited computational resources, we chose not to risk using such a time consuming SSL technique.
+**We intentionally chose to avoid using the state-of-the-art contrastive SSL techniques - such as MoCo and SimCLR - because the contrastive loss requires a HUGE amount of negative samples.  Also, it has been argued that aspects of these techniques are specialised towards the ImageNet dataset, and may not generalise well to others. Due to time and computational constraints, we chose not to risk using such a time consuming technique.**
 
 
- We used the ResNet-18 architecture due to the limited data.  However, after reading the landmark [ResNet paper](https://arxiv.org/abs/1512.03385), I realised this was a mistake because the depth of the network contributes very little to overfitting: ResNets overfit on ImageNet only when 1,202 layers are used. So we should have explored the possibility of using ResNet-50 and ResNet-34 as the image encoder.
+ We used the ResNet-18 architecture due to the limited data.  However, after reading the landmark [ResNet paper](https://arxiv.org/abs/1512.03385), I realised **this was a mistake** because the depth of the network contributes very little to overfitting: ResNets overfit on ImageNet only when 1,202 layers are used. So we should have explored the possibility of using ResNet-50 and ResNet-34 as the image encoder.
 
 <br>
 
@@ -156,7 +165,7 @@ We then produced a top view feature map through a weighted sum of the front view
 
 $$\text{TopViewFeatures}[:, k, l] = \sum_{<i, j, s>}\text{FrontViewFeatures}_s[:, i, j]\times w_{ijskl}$$
 
-$$w_{ijskl} =\text{softmax}_{<k,l>} -(\vert x^{\text{pred}}_{ijs}-x^{\text{top_view}}_{skl}\vert ^2 + \vert y^{\text{pred}}_{ijs}-y^{\text{top_view}}_{skl} \vert ^2)^{1/2}  $$
+$$w_{ijskl} =\text{softmax}_{<i,j>} -(\vert x^{\text{pred}}_{ijs}-x^{\text{top_view}}_{skl}\vert ^2 + \vert y^{\text{pred}}_{ijs}-y^{\text{top_view}}_{skl} \vert ^2)^{1/2}  $$
 
 ($x_s^{\text{top_view}}$, $y_s^{\text{top_view}}$) can easily be obtained using the fact that the output map corresponds to 80m$\times$80m grid around the ego car.
 
@@ -165,7 +174,8 @@ Indexing:
 2. $i$, $j$: The spatial dimensions of the FrontViewFeatures.
 3. $k$, $l$: The spatial dimensions of the TopViewFeatures.
 
-**This was inspired by the attention layers of transformers.** We implemented efficiently using Pytorch's Batch Matrix Multiplication subroutine.
+**This was inspired by graphical neural networks. One could consider the closeness of predicted top view coordinates and the estimated top view coordinates to be the degree of connection between Front View Features and Top View features.** We implemented efficiently using Pytorch's Batch Matrix Multiplication subroutine.
+
 
 <br>
 
@@ -177,11 +187,11 @@ This was a simple 5-layer FCNN, whose output map is the predicted road segmentat
 
 ### Object Detector
 
-This was a simple 5-layer FCNN, whose output map is the confidence score, class probability, offsets of the anchors. We used focal loss to train the confidence score and class probability, and the smooth L1 loss to train the offsets. During inference, we would conduct non-maximal suppression on the anchor probabilities. It is inspired by YOLO.
+This was a simple 5-layer FCNN, whose output map is the confidence score, class probability, offsets of the anchors. We used focal loss to train the confidence score and class probability, and the smooth L1 loss to train the offsets. During inference, we would conduct non-maximal suppression on the anchor probabilities. It is similar to YOLO.
 
 <br>
 
-### Baseline Model
+## Baseline Model
 
 We also trained a simple baseline model, that is similar of the above model, except it combines the 6 image encodings by simply concatenating them along the channel dimension, instead of using a Depth Map Estimator and Top View Feature Generator.
 
@@ -226,4 +236,6 @@ We ended up submitting the benchmark model, which achieved average results. In h
 ___
 ___
 
-**Update on 10th June 2020:** I began working in the instructors' research group on this task. In particular, we are trying to achieve competitive performance on the [Waymo Open Dataset](https://waymo.com/open/) using a fraction of its annotations.
+# Updates
+
+**10th June 2020:** I began working in the instructors' research group on this task. In particular, we are trying to achieve competitive performance on the [Waymo Open Dataset](https://waymo.com/open/) using a fraction of its annotations.
