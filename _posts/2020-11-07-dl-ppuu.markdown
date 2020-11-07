@@ -1,0 +1,281 @@
+---
+layout: post
+title:  "Autonomous Driving in Dense Traffic using Offline Model-based Reinforcement Learning"
+date:   2020-11-07 14:10:51 +0800
+categories: Deep-Learning
+mathjax: true
+tags: Autonomous-Vehicles Reinforcement-Learning Deep-Learning Machine-Learning Pytorch Python
+description: I contributed to the project titled "Prediction and Policy learning Under Uncertainty", which involves training an autonomous driving agent to navigate through dense traffic, using Offline Model-based Reinforcement Learning. It was published in ICLR 2019, by Mikael Henaff (<i>Facebook AI Research</i>),  Prof. Alfredo Canziani (<i>NYU</i>) and Prof. Yann Lecun (<i>Facebook AI Research</i>, <i>NYU</i>). <br> <b>I improved the performance of the driving agent by modifying the World Model. I also implemented a program to test the agent.</b>
+---
+
+<style>
+
+table{
+    border-collapse: collapse;
+    border-spacing: 0;
+    border:2px solid #ff0000;
+}
+
+th{
+    border:2px solid #000000;
+}
+
+td{
+    border:1px solid #000000;
+}
+</style>
+
+<font size="+3"><b>Table of Content</b></font>
+
+* TOC
+{:toc}
+
+___
+___
+
+# Introduction
+<br>
+
+The project of Prediction and Policy learning Under Uncertainty tackles the problem of training an autonomous agent to drive through dense traffic. The driving agent has access to the segmented top view (bird's eye view) of its surroundings. The project was published in ICLR 2019, by Mikael Henaff (<i>Facebook AI Research</i>),  Prof. Alfredo Canziani (<i>NYU</i>) and Prof. Yann Lecun (<i>Facebook AI Research</i>, <i>NYU</i>). Upon completing NYU's Deep Learning course - mentioned in [`a previous post`](https://sohamtamba.github.io/projects/deep-learning/2020/06/01/dl-bev.html) - I was allowed to join the instructor's research group.
+
+<br>
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
+<figure>
+    <img src="{{ site.baseurl }}/assets/images/PPUU/top_view.png" />
+    <figcaption> <b> Figure 1:</b> Segmented Top View of Traffic.  </figcaption>
+</figure>
+</div>
+
+The above figure represents the segmented top view available to an agent. The blue, green, red pixels represent the agent car, back-ground cars, lane markings respectively.
+
+Since NYU's budget and lawyers won't allow us to train an autonomous agent by trial and error on the highway (Model-free Reinforcement Learning), pre-recorded traffic is used to train a World Model (simulator) that approximates a highway stretch and the agent is trained in the World Model (Offline Model-based Reinforcement Learning). The performance of an agent is evaluated by its ability to navigate through a pre-recorded 200m highway stretch. For a more detailed explaination, please refer the [`official video summary`](https://www.youtube.com/watch?v=X2s7gy3wIYw&feature=youtu.be).
+
+**I made two contributions to this project:**
+
+1. **I implemented a program to test an agent on a longer highway stretch, using multiple smaller highway stretches.**
+2. **I improved the performance of the driving agent by improving the World Model.**
+
+**This post will describe the latter.**
+
+___
+___
+
+# Method
+<br>
+
+I investigated the possibility of improving the World Model by injecting more inductive bias into it, a task a PhD student had worked on. While examining the World Model, I noticed the model's final activation function was sigmoid. The pixels of the segmented top view are binary ($0$ or $1$), but the output of the sigmoid is biased against binary values. This could lead to a discrprency between the distribution of the true top view images, and the simulated top view images. I created a histogram of the pixel values of the true top view images and the simulated top view images:
+
+<br>
+
+
+|Range      | True Images | Simulated Images |
+|:---------:|:----:|:---------:|
+|0.00 to 10^-9   | **77.05%** | 0.00% |
+|10^-9 to 0.10  | 2.53%  | **79.26%** |
+|0.10 to 0.20  | 6.74%  | 6.19% |
+|0.20 to 0.30  | 1.23%  | 0.89% |
+|0.30 to 0.40  | 0.07%    | 1.14% |
+|0.40 to 0.50  | 0.28%   | 1.10% |
+|0.50 to 0.60  | 0.89%   | 0.69% |
+|0.70 to 0.80  | 1.30%  | 0.83% |
+|0.80 to 0.90  | 6.41%  | 6.48% |
+|0.90 to 1.00-10^-9  | 0.96%   | **3.38%** |
+|1-10^-9 to 1.00 | **2.48%**  | 0.00% |
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); vertical-align: middle; padding:29px 0;">
+<b>Table 1:</b> Frequency analysis of the pixel values of True Images and Simulated images. There is a major discreprency between the two types of images in the first two and last two rows.
+</div>
+
+<br>
+As you can see, most of the pixels of the true images are zero, but most of those in the simulated images are in the range ($0.9, 0.1$). **Due to the highly non-linear nature of deep neural networks, this minor discreprency might affect the performance of the driving agent.**
+
+**Surprisingly, there are a few non-binary values in the true image, around the cars and lanes. This was a result of downsampling the image. Since sigmoid has high gradient in the region between 0 and 1, closer to 0.5 (and the Policy Model is trained using back-propagation), the policy model might be relying on those pixels for gradient signal instead of the pixels whose values are 1.**
+
+<br>
+
+I then compared the actions (acceleration and steering) of the driving agent during the validation phase of policy training, after it was provided a simulated image, versus a simulated image whose pixels having the value ($0, 0.1$), ($0.9, 1$) were set to $0$, $1$ respectively. Recall that the policy is trained using the simulated images created by the World Model.
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
+<figure>
+    <img src="{{ site.baseurl }}/assets/images/PPUU/val_acc.jpg" />
+    <figcaption> <b> Figure 2:</b> Difference in acceleration chosen by the agent when provided a simulated image versus the same image after thresholding. </figcaption>
+</figure>
+</div>
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
+<figure>
+    <img src="{{ site.baseurl }}/assets/images/PPUU/val_steer.jpg" />
+    <figcaption> <b> Figure 3:</b> Difference in steering chosen by the agent when provided a simulated image versus the same image after thresholding. </figcaption>
+</figure>
+</div>
+
+The difference in acceleration could be as large as 2m/s, which could easily cause a crash in dense traffic.
+
+___
+___
+
+# Experiment
+<br>
+
+I created a **Thresholded World Model** by making a simple modification to the original World Model: Set its output pixels in the range ($0, 0.1$) to $0$, and those in the range ($1-10^{-9}, 1$) to $1$, while preserving a gradient. **Some might consider this to be a hacky and naive way to go about it, but it gets results quickly.** One of the lessons I had learned from the [`Deep Learning Course Project`](https://sohamtamba.github.io/projects/deep-learning/2020/06/01/dl-bev.html) is to validate your idea quickly before investing significant time in it - *My initial plan was to create a novel activation function and a novel autograd scheme, in which each node of the computational graph has a left-gradient and right-gradient .......* 
+
+
+The code looks something like this:
+
+```
+import torch
+import torch.nn as nn
+
+# Pyotch Autograd function
+class Threshold(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, input, thresh):
+        output = input.clone()
+        output[output <= 0.1] = 0
+        output[output >= 0.9] = 1
+        return output
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        return grad_output.clone()
+
+
+class ThresholdedWorldModel(nn.Module):
+    def __init__(self, world_model):
+        super(ThresholdedWorldModel, self).__init__()
+        self.world_model = world_model
+        self.policy_training = False
+
+    def forward(self, current_state, action):
+        next_state = self.world_model(current_state, action)
+        if self.policy_training:
+            next_state = Threshold.apply(next_state)
+        return next_state
+
+    def train_policy(self):
+        self.policy_training = True
+    def train_self(self):
+        self.policy_training = False
+```
+<br>
+This could be viewed as modifying the sigmoid activation function to thresholded sigmoid, which could be described as:
+
+$$\text{thresholded_sigmoid}(x)\ =\ \text{sigmoid}(x)\ +\ \text{stop_gradient}(\epsilon(\text{sigmoid}(x)))$$
+
+$$
+\epsilon(y)=
+\begin{cases}
+-y\ \ \ \ \ \ \ \ \ \text{if}\ y \leq 0.1 \\
+1-y\ \ \ \ \ \text{else if}\ y \geq 0.9 \\
+0\ \ \ \ \ \ \ \ \ \ \ \ \text{else}
+\end{cases}
+$$
+
+Applying the stop gradient to the $\epsilon$ term  may lead to an issue in backpropagation, but it might be justified by the fact that its gradient has a absolute value of atmost $0.09$, and setting $0.09$ to $0$ may not have much effect.
+
+<br>
+
+I trained two agents, using the same hyper-parameters and training epochs; one with the thresholding scheme and one without. I then evaluated their performance using the benchmark mentioned above.
+
+I also evaulated the performance of the two models using test images that were downsampled using nearest mode instead of billinear.
+
+
+___
+___
+
+
+## Results
+<br>
+
+Note that the performance of an agent varies wildly with hyper-parameters, random seed and training steps. The hyper-parameters are tuned for training the agents using a regular World Model.
+
+
+<br>
+
+| Training Steps  | Regular World Model | Thresholded World Model   |
+|:-----------:|:--------------:|:---------------:|     
+|  5,000      |    40.5%       | **43.0%**  |
+| 10,000      |    54.2%       | **73.6%** |     
+| 15,000      |    **65.2%**       | 50.6% |     
+| 20,000      |    27.6%       | **72.0%** |     
+| 25,000      |    68.1%       | **71.5%** |     
+| 30,000      |    **71.5%**       | 67.4% |     
+| 35,000      |    61.9%       | **72.0%** |     
+| 40,000      |    **73.1%**       | 64.2% |     
+| 45,000      |    71.5%      | **77.2%** |     
+| 50,000      |    74.0%       | **75.2%** |     
+| 55,000      |    70.4%       | **73.4%** |     
+| 60,000      |    72.7%       | **74.0%** |     
+|65,000       |    75.4%      | **75.9%** |     
+| 70,000      |    72.9%       | **74.3%** |     
+| 75,000      |    **66.0%**       | 62.2% |
+| **Mean**    |    64.3%      | **68.4%** |
+| **Std**    |    13.2%      | **9.4%** |
+| **Best**    |    75.4%       | **77.2%** |
+
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); vertical-align: middle; padding:29px 0;">
+<b>Table 2:</b> Performance of the two agents in terms of its rate of success in navigating through a 200m highway stretch with pre-recorded traffic. The agent trained using a Thresholded World Model  outperforms the agent trained using a regular World Model.
+</div>
+
+<br>
+
+
+**As you can see from the above table, the agent trained using a Thresholded World Model outperforms the one trained using a regular World Model 11 out of 15 times has better average performance, best performance and variance.** This seems like a significant improvement, but it is worth noting that the performance of an agent varies wildly with hyper-parameters, random seed and training steps.
+
+**More importantly, the agent achieves a success rate of 77.2% without any hyper-parameter tuning and using a single random seed. In comparison, regarding models trained without this technique, 10 agents were trained using a different random seed and only 3 of them achieved a success rate of 77%, after significant hyper-parameter tuning.** For more details on the 10 agents, please refer to the [`evaluation notebook`](https://github.com/Atcold/pytorch-PPUU/blob/master/Notebooks/Plotting-success-rate.ipynb).
+
+
+<br>
+
+
+
+| Training Steps  | Regular World Model | Thresholded World Model   |
+|:-----------:|:--------------:|:--------------:|
+|  5,000      | 29.9%          | **42.4%** |
+| 10,000      | 35.8%          | **62.0%** |     
+| 15,000      | **59.0%**          | 39.0% |     
+| 20,000      | 33.5%          | **64.7%** |     
+| 25,000      | 58.1%          | **65.4%** |     
+| 30,000      | **68.1%**          | 64.9% |     
+| 35,000      | 52.6%          | **70.9%** |     
+| 40,000      | **63.5%**          | 56.0% |     
+| 45,000      | 70.1%          | **70.2%** |     
+| 50,000      | **67.4%**          | 39.0% |     
+| 55,000      | 67.9%          | **68.3%** |     
+| 60,000      | 60.8%          | **72.9%** |     
+|65,000      | 66.5%          | **68.1%** |     
+| 70,000      | 55.9%          | **74.9%** |     
+| 75,000      | **60.4%**          | 56.7% |
+| **Mean**      | 56.6%          | **61.0%** |
+| **Std**      | 12.7%          | **11.6%** |
+| **Best**      | 70.1%          | **74.9%** |
+
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); vertical-align: middle; padding:29px 0;">
+<b>Table 3:</b> Performance of the two agents in terms of its rate of success in navigating through a 200m highway stretch with pre-recorded traffic, using Nearest downsampling instead of Billinear.
+</div>
+
+<br>
+Once again, the model trained using a Thresholded World Model outperforms one trained using a Regular World Model.
+<br>
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
+<figure>
+    <img src="{{ site.baseurl }}/assets/images/PPUU/success_plot.png" />
+    <figcaption> <b> Figure 4:</b> Visualization of Table 2 and Table 3. An agent's performance decreases significantly when the images provided to it are downsampled in Billinear mode instead of Nearest, which supports my suspicion.  </figcaption>
+</figure>
+</div>
+
+<br>
+
+**As you can see from Figure 4, applying Nearest downsampling to the Top View images at test time usually leads to a significant decrease in performance, implying that the driving agent relies on the soft pixels at the edge of a car to make its decisions, instead of binary pixels interior to the cars.**
+
+
+# Conclusion
+<br>
+
+It is possible that the final sigmoid activation function of the World Model likely biases it in a manner that hurts the performance of the driving agent. Firstly, it causes a discreprency in pixel values since true images have binary pixel values and sigmoid is biased against binary values. Secondly, since sigmoid has lesser gradient at its extreme points, the agent trained in the World Model may rely on the soft pixels at the edge of the car to choose its actions. 
+
+Thresholding the output of the World Model - which effectively modifies the final activation function - improved the performance of the driving agent, but it is worth noting that the performance of an agent varies wildly with the training steps, hyperparameters and random seed, so it is difficult to judge its statistical significance.
