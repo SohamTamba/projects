@@ -130,11 +130,11 @@ import torch.nn as nn
 # Pyotch Autograd function
 class Threshold(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, input, thresh):
+    def forward(ctx, input, cut_off):
         output = input.clone()
-        output[output <= 0.1] = 0
-        output[output >= 0.9] = 1
-        return output
+        output[output <= cut_off] = 0
+        output[output >= 1-cut_off] = 1
+        return output, None
 
     @staticmethod
     def backward(ctx, grad_output):
@@ -142,15 +142,16 @@ class Threshold(torch.autograd.Function):
 
 
 class ThresholdedWorldModel(nn.Module):
-    def __init__(self, world_model):
+    def __init__(self, world_model, cut_off):
         super(ThresholdedWorldModel, self).__init__()
         self.world_model = world_model
+        self.cut_off = cut_off
         self.policy_training = False
 
     def forward(self, current_state, action):
         next_state = self.world_model(current_state, action)
         if self.policy_training:
-            next_state = Threshold.apply(next_state)
+            next_state = Threshold.apply(next_state, self.cut_off)
         return next_state
 
     def train_policy(self):
@@ -166,19 +167,63 @@ $$\text{thresholded_sigmoid}(x)\ =\ \text{sigmoid}(x)\ +\ \text{stop_gradient}(\
 $$
 \epsilon(y)=
 \begin{cases}
--y\ \ \ \ \ \ \ \ \ \text{if}\ y \leq 0.1 \\
-1-y\ \ \ \ \ \text{else if}\ y \geq 0.9 \\
+-y\ \ \ \ \ \ \ \ \ \ y \leq \text{cut_off} \\
+1-y\ \ \ \ \ \ 1-y \leq \text{cut_off} \\
 0\ \ \ \ \ \ \ \ \ \ \ \ \text{else}
 \end{cases}
 $$
 
-Applying the stop gradient to the $\epsilon$ term  may lead to an issue in backpropagation, but it might be justified by the fact that its gradient has a absolute value of atmost $0.09$, and setting $0.09$ to $0$ may not have much effect.
+I also investigated the effect of discretizing the output of the World Model by projecting each pixel value to the set of pixel values found in the test images. 
+
+The code looks something like this:
+
+```
+import torch
+import torch.nn as nn
+
+# Pyotch Autograd function
+class Discretize(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, input, codes):
+        input = input.unsqueeze(-1)
+        codes = codes.view(1, 1, 1, 1, -1)
+        distance = torch.abs(inputs - codes)
+        min_ind = torch.argmin(distance, axis = -1)
+        output = codes[min_ind]
+        return output
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        return grad_output.clone()
+
+
+class DiscretizedWorldModel(nn.Module):
+    def __init__(self, world_model):
+        super(ThresholdedWorldModel, self, pixel_codes).__init__()
+        self.world_model = world_model
+        self.pixel_codes = pixel_codes
+        self.policy_training = False
+
+    def forward(self, current_state, action):
+        next_state = self.world_model(current_state, action)
+        if self.policy_training:
+            next_state = Discretize.apply(next_state, self.pixel_codes)
+        return next_state
+
+    def train_policy(self):
+        self.policy_training = True
+    def train_self(self):
+        self.policy_training = False
+```
 
 <br>
 
-I trained two agents, using the same hyper-parameters and training epochs; one with the thresholding scheme and one without. I then evaluated their performance using the benchmark mentioned above.
+I conducted the following experiments:
 
-I also evaulated the performance of the two models using test images that were downsampled using nearest mode instead of billinear.
+1. Evaluate agent trained in a Thresholded World Model.
+2. Evaluate the above two agents, but downsample the test images
+3. Adjust the threshold cut-off, based on the findings of the above two experiments, and evaluate it.
+4.  Evaluate agent trained in a Discretized World Model.
 
 
 ___
@@ -188,10 +233,14 @@ ___
 ## Results
 <br>
 
-Note that the performance of an agent varies wildly with hyper-parameters, random seed and training steps. The hyper-parameters are tuned for training the agents using a regular World Model.
+Note that the performance of an agent varies with hyper-parameters, random seed and training steps; Please refer to the [`evaluation notebook`](https://github.com/Atcold/pytorch-PPUU/blob/master/Notebooks/Plotting-success-rate.ipynb) for more information. The hyper-parameters are tuned for training the agents using a regular World Model. 
 
 
+
+### 1. Thresholded World Model
 <br>
+I evaluated an agent that was trained in a Thresholded World Model and compared it to one trained in a Regular World Model.
+
 
 | Training Steps  | Regular World Model | Thresholded World Model   |
 |:-----------:|:--------------:|:---------------:|     
@@ -219,16 +268,16 @@ Note that the performance of an agent varies wildly with hyper-parameters, rando
 <b>Table 2:</b> Performance of the two agents in terms of its rate of success in navigating through a 200m highway stretch with pre-recorded traffic. The agent trained using a Thresholded World Model  outperforms the agent trained using a regular World Model.
 </div>
 
-<br>
 
+**As you can see from the above table, the agent trained using a Thresholded World Model outperforms the one trained using a regular World Model in terms of average success rate, best success rate and variance.** This seems like a significant improvement, but it is worth noting that the performance of an agent varies with hyper-parameters, random seed and training steps. It is worth noting though that the agent trained in a Thresholded World Model outperforms the other 11 - 4 times, when evaluated at the same time step.
 
-**As you can see from the above table, the agent trained using a Thresholded World Model outperforms the one trained using a regular World Model 11 out of 15 times has better average performance, best performance and variance.** This seems like a significant improvement, but it is worth noting that the performance of an agent varies wildly with hyper-parameters, random seed and training steps.
-
-**More importantly, the agent achieves a success rate of 77.2% without any hyper-parameter tuning and using a single random seed. In comparison, regarding models trained without this technique, 10 agents were trained using a different random seed and only 3 of them achieved a success rate of 77%, after significant hyper-parameter tuning.** For more details on the 10 agents, please refer to the [`evaluation notebook`](https://github.com/Atcold/pytorch-PPUU/blob/master/Notebooks/Plotting-success-rate.ipynb).
 
 
 <br>
 
+### 2. Billinear Downsampling vs Nearest Downsampling
+<br>
+I again evaluated the above two agents, but downsampled the test images using Nearest Downsampling instead of Billinear Downsampling.
 
 
 | Training Steps  | Regular World Model | Thresholded World Model   |
@@ -257,8 +306,8 @@ Note that the performance of an agent varies wildly with hyper-parameters, rando
 <b>Table 3:</b> Performance of the two agents in terms of its rate of success in navigating through a 200m highway stretch with pre-recorded traffic, using Nearest downsampling instead of Billinear.
 </div>
 
-<br>
 Once again, the model trained using a Thresholded World Model outperforms one trained using a Regular World Model.
+<br>
 <br>
 
 <div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
@@ -268,14 +317,83 @@ Once again, the model trained using a Thresholded World Model outperforms one tr
 </figure>
 </div>
 
-<br>
 
 **As you can see from Figure 4, applying Nearest downsampling to the Top View images at test time usually leads to a significant decrease in performance, implying that the driving agent relies on the soft pixels at the edge of a car to make its decisions, instead of binary pixels interior to the cars.**
 
+<br>
+
+### 3. Adjust Threshold Cut-off
+<br>
+
+The experiment using Nearest downsampling found that the soft-pixels of the test images help the agent choose a better action. So perhaps too much thresholding decrease the performance of the agent. I found that the smallest non-zero pixel value in the test images is $0.0039$, and trained the agent in a Thresholded World Model with a cut-off of $0.001$ instead of $0.1$.
+
+
+| Training Steps  | Threshold cut-off = 0.1 | Thresholded cut-off = 0.001   |
+|:-----------:|:--------------:|:--------------:|
+|  5,000  |  43.0%  |  **49.2%**  |
+|  10,000  |  73.6%  |  **75.8%**  |
+|  15,000  |  50.6%  |  **65.6%**  |
+|  20,000  |  **72.0%**  |  66.8%  |
+|  25,000  |  **71.1%**  |  69.3%  |
+|  30,000  |  67.4%  |  **73.1%**  |
+|  35,000  |  72.0%  |  **79.0%**  |
+|  40,000  |  64.2%  |  **76.5%**  |
+|  45,000  |  **77.2%**  |  73.8%  |
+|  50,000  |  **75.2%**  |  65.1%  |
+|  55,000  |  **73.4%**  |  62.9%  |
+|  60,000  |  **74.0%**  |  70.6%  |
+|  65,000  |  **75.9%**  |  75.2%  |
+|  70,000  |  **74.3%**  |  69.5%  |
+|  75,000  |  62.2%  | **69.2%**  |
+|  **Mean**  |  68.40%  |  **69.44%**  |
+|  **Std**  |  9.49%  |  **7.03%**  |
+|  **Best**  |  77.2%  |  **79.0%**  |
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); vertical-align: middle; padding:29px 0;">
+<b>Table 4:</b> Performance of two agents trained in a Thresholded World Model with a cut-off 0.1 and 0.001 respectively, in terms of its rate of success in navigating through a 200m highway stretch with pre-recorded traffic.
+</div>
+
+<br>
+**Using a smaller cut-off to avoid thresholding soft pixel values that are present in the test image seems to further improve performance in terms of average success rate, best success rate and variance.** But once again, it is difficult to judge its statistical significance.
+
+Unless stated otherwise, Thresholded World Models will hence-forth use a cut-off of $0.001$.
+
+<br>
+
+### 4. Discretized World Model
+<br>
+
+| Training Steps  | Regular World Model | Thresholded World Model   | Discretized World Model |
+|:-----------:|:--------------:|:--------------:|:--------------:|
+|  5,000  |  40.5%  |  **49.2%**  |  44.2%  |
+|  10,000  |  54.2%  |  **75.8%**  |  31.0%  |
+|  15,000  |  65.2%  |  **65.6%**  |  59.4%  |
+|  20,000  |  27.6%  |  66.8%  |  **74.7%**  |
+|  25,000  |  68.1%  |  **69.3%**  |  69.2%  |
+|  30,000  |  71.5%  |  73.1%  |  **74.3%**  |
+|  35,000  |  61.9%  |  **79.0%**  |  67.4%  |
+|  40,000  |  73.1%  |  **76.5%**  |  70.9%  |
+|  45,000  |  71.5%  |  **73.8%**  |  73.1%  |
+|  50,000  |  74.0%  |  65.1%  |  **77.9%**  |
+|  55,000  |  **70.4%**  |  62.9%  |  62.6%  |
+|  60,000  |  72.7%  |  70.6%  |  **73.6%**  |
+|  65,000  |  **75.4%**  |  75.2%  |  73.3%  |
+|  70,000  |  **72.9%**  |  69.5%  |  66.5%  |
+|  75,000  |  66.0%  |  **69.2%**  |  64.3%  |
+|  **Mean**  |  64.33%  |  **69.44%**  |  65.49%  |
+|  **Std**  |  13.21%  |  **7.03%**  |  12.21%  |
+|  **Best**  |  75.4%  |  **79.0%**  |  77.9%  |
+
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); vertical-align: middle; padding:29px 0;">
+<b>Table 5:</b> Performance of three agents trained in a Regular World Model, Thresholded World Model and Discretized World Model respectively, in terms of its rate of success in navigating through a 200m highway stretch with pre-recorded traffic.
+</div>
+
+**The agent trained in Discretized World Model outperforms the one trained in a Regular World Model terms of average success rate, best success rate and variance, by a slim margin. The agent trained in a Thresholded World Model outperforms the others.**
 
 # Conclusion
 <br>
 
 It is possible that the final sigmoid activation function of the World Model likely biases it in a manner that hurts the performance of the driving agent. Firstly, it causes a discreprency in pixel values since true images have binary pixel values and sigmoid is biased against binary values. Secondly, since sigmoid has lesser gradient at its extreme points, the agent trained in the World Model may rely on the soft pixels at the edge of the car to choose its actions. 
 
-Thresholding the output of the World Model - which effectively modifies the final activation function - improved the performance of the driving agent, but it is worth noting that the performance of an agent varies wildly with the training steps, hyperparameters and random seed, so it is difficult to judge its statistical significance.
+Thresholding the output of the World Model - which effectively modifies the final activation function - improved the performance of the driving agent, but it is worth noting that the performance of an agent varies with the training steps, hyperparameters and random seed, so it is difficult to judge its statistical significance.
