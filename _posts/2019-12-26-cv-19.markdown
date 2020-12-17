@@ -68,7 +68,7 @@ This reminded me of a *NeurIPS 2018 tutorial on adversarial robustness in Deep L
 1. **It is believed that a more difficult pretext task could force a neural network to learn better image representations**
 2. **The rotation transformation makes classification more difficult for a neural network**
 3. **Pretraining a network on the Rotation Prediction pretext task produces the best image representations**
-4. **Adversarial perturbation transformation makes classification significantly more difficult for a neural network**
+4. **Adversarial perturbation transformation makes classification significantly more difficult for a neural network, while maintaining the underlying image semantics**
 
 **then perhaps pretraining a network with the adversarial perturbation transformation would force the neural network to learn significantly better image representations.**
 
@@ -195,7 +195,7 @@ ___
 
 Our experiments suggest that pretraining a network with adversarial noise develops a feature extractor that is more resistant to underfitting. Perhaps this technique could be used to create a more smaller feature extractor with competitive performance. For example, maybe we could obtain a ResNet-50 feature extractor, with half the number of channels at each hidden layer. 
 
-However, the improvement in performance was not as significant as were hoping for; Perhaps we should focus more on developing better pretext tasks, rather than techniques to boost pre-existing pretext tasks. 
+However, the improvement in performance was not as significant as were hoping for, and not nearly enough to justify the huge increase in computational cost. Perhaps we should focus more on developing better pretext tasks, rather than techniques to boost pre-existing pretext tasks. 
 
 ___
 ___

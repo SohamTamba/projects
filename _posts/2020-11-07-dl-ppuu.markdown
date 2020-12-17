@@ -80,7 +80,7 @@ I investigated the possibility of improving the World Model by injecting more in
 |0.50 to 0.60  | 0.89%   | 0.69% |
 |0.70 to 0.80  | 1.30%  | 0.83% |
 |0.80 to 0.90  | 6.41%  | 6.48% |
-|0.90 to 1.00-10^-9  | 0.96%   | **3.38%** |
+|0.90 to 1-10^-9  | 0.96%   | **3.38%** |
 |1-10^-9 to 1.00 | **2.48%**  | 0.00% |
 
 <div style="background-color:rgba(0, 0, 0, 0.2470588); vertical-align: middle; padding:29px 0;">
@@ -118,7 +118,7 @@ ___
 # Experiment
 <br>
 
-I created a **Thresholded World Model** by making a simple modification to the original World Model: Set its output pixels in the range ($0, 0.1$) to $0$, and those in the range ($1-10^{-9}, 1$) to $1$, while preserving a gradient. **Some might consider this to be a hacky and naive way to go about it, but it gets results quickly.** One of the lessons I had learned from the [`Deep Learning Course Project`](https://sohamtamba.github.io/projects/deep-learning/2020/06/01/dl-bev.html) is to validate your idea quickly before investing significant time in it - *My initial plan was to create a novel activation function and a novel autograd scheme, in which each node of the computational graph has a left-gradient and right-gradient .......* 
+I created a **Thresholded World Model** by making a simple modification to the original World Model: Set its output pixels in the range ($0, 0.1$) to $0$, and those in the range ($0.9, 1$) to $1$, while preserving a gradient. **Some might consider this to be a hacky and naive way to go about it, but it gets results quickly.** One of the lessons I had learned from the [`Deep Learning Course Project`](https://sohamtamba.github.io/projects/deep-learning/2020/06/01/dl-bev.html) is to validate your idea quickly before investing significant time in it - *My initial plan was to create a novel activation function and a novel autograd scheme, in which each node of the computational graph has a left-gradient and right-gradient .......* 
 
 
 The code looks something like this:

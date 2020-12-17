@@ -1,0 +1,193 @@
+---
+layout: post
+title:  "Transfer Learning for Medical Images"
+date:   2020-12-17 14:10:51 +0800
+categories: Deep-Learning
+mathjax: true
+tags: Healthcare Deep-Learning Machine-Learning Pytorch-Lightning Pytorch Python
+description: I investigated the benefit Transfer Learning for Medical Images. This was my course project for NYU's Machine Learning for Healthcare course, taught by Prof. Rajesh Ranganath (<i>NYU</i>).
+---
+
+<style>
+
+table{
+    border-collapse: collapse;
+    border-spacing: 0;
+    border:2px solid #ff0000;
+}
+
+th{
+    border:2px solid #000000;
+}
+
+td{
+    border:1px solid #000000;
+}
+</style>
+
+<font size="+3"><b>Table of Content</b></font>
+
+* TOC
+{:toc}
+
+___
+___
+
+# Introduction
+<br>
+
+Transfer Learning is a technique used to improve the data efficiency of neural networks. Suppose we want to train a neural network to solve the task of classifying a image as that of a cat or dog, but have very little data. Instead of training a neural network from scratch, we will retrieve a neural network trained to solve a different task (with a huge amount of data), and further train its parameters (fine-tune) to solve our downstream task of classifying an image as that of a cat or dog. This usually leads to better performance, and faster convergence.
+
+A recent paper published by Google Brain - titled [Transfusion: Understanding Transfer Learning for Medical Imaging](https://arxiv.org/abs/1902.07208) - found that a small convolutional neural network trained from scratch performs competitively with large neural network that was fine-tuned on the task after being trained on the ImageNet task. This is counter-intuitive because larger neural networks typically outperform small networks on complex task, if sufficient data is available. Since Transfer Learning typically improves data efficiency, one would expect large models pre-trained on a huge amount of data to outperform a small model. I investigated why this was the case. I conducted my experiments of the CheXpert dataset.
+
+___
+___
+
+# Investigation
+<br>
+
+I formed the following conjectures that might explain the results of the paper:
+
+
+1. **Deep models are too difficult to train:** In the past, deeper models would underfit compared to shallow models. This was counter-intuitive because the set of all models that can be represented by 50-layer neural network is a super set of all the models that can be represented by a 5-layer neural network, as 45 layers could learn the identity function. This was a result of deeper neural networks being more difficult to train than shallow network, and unrelated to the complexity of the models. Training on **unbalanced** datasets of medical images might be too difficult.
+2. **The task is too simple:** Medical images are highly curated and homogeneous, compared to your typical photographs. So perhaps we don't require a complex (large) model to solve the task.
+3. **More data is not needed:** CheXpert already contains 200,000 images. This is not as large as ImageNet - which contains 14,000,000 images - but perhaps it sufficiently represents the distribution of chest x-rays. As mentioned earlier, medical images are highly curated and more homogeneous.
+4. **Domains are too different:** Perhaps the domain of chest x-rays classification (CheXpert) and photograph classification (ImageNet) are too different, so the weights of a model trained on ImageNet do not transfer well to CheXpert.
+
+___
+
+# Experiments
+<br>
+
+
+I considered the following architectures:
+
+1. Resnet-50
+2. Resnet-34
+3. Resnet-18
+4. CBR-Large-Wide
+5. CBR-Large-Tall
+6. CBR-Small
+7. CBR-Tiny
+
+The details of the four CBR (convolution-batchnorn-relu) architectures can be found in the [Transfusion paper](https://arxiv.org/abs/1902.07208). They are basically 5 to 6 stacks of convolution, batchnorm, relu and max pooling, followed by a global average pooling layer and fully connected layer.
+
+<br>
+
+All models were trained on the CheXpert training split, and evaluated on the CheXpert validation split in terms of Area Under ROC. Unless stated otherwise, they were trained and tested on the task of Edema detection.
+
+<br>
+
+Details:
+
+1. Number of epochs: 100
+2. Optimizer: Adam
+3. Initial learning rate: Calculated using the [Learning Rate range test](https://arxiv.org/abs/1506.01186).
+4. Scheduler: Anneal by a factor of 10 when training loss does not increase for 10 epochs.
+5. Augmentation: Random Affine
+
+
+<br>
+
+## Training Difficulty and Task Complexity
+
+Larger models usually lead to better performance on the **training dataset**. I plotted the training curves of the 3 resnet models and the 2 large CBR models. If the task is too simple, then the simple models should have the same training loss and as the complex models. If the deeper models are too difficult to train, then the shallow models should have better training loss 
+
+
+<br>
+
+## Dataset Bottle-neck
+
+Larger datasets usually lead to better performance on the **test dataset**. To investigate whether the task is already sufficiently data efficient, I plotted the performance of the CBR-Large-Wide model as a function dataset size. If it is, then performance should improve on increasing the dataset. I also plotted performance as a function of model size and depth while using the entire dataset, and only 5,000 datapoints.
+
+<br>
+
+## Domain Difference
+
+To investigate the lack of performance improvement is due to the difference in domains of upstream task and downstream task, I trained a CBR-Large-Wide model on the CheXpert Consolidation detection task and fine-tuned it on the Edema detection task. I plotted performance as a function a function of dataset size. I also considered freezing the backbone of the model, and it usually leads to improved performance while using very little data.
+
+
+
+___
+___
+
+
+# Results
+<br>
+
+
+## Training Curves
+
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
+<figure>
+    <img src="{{ site.baseurl }}/assets/images/MLHC-FA20/train_peaks.png" />
+    <figcaption> <b>Figure 1:</b> Resnet-50 training loss spikes, indicating unstable training  </figcaption>
+</figure>
+</div>
+
+Figure 1 suggests that training is difficult for Resnet-50.
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
+<figure>
+    <img src="{{ site.baseurl }}/assets/images/MLHC-FA20/train_no_tall.png" />
+    <figcaption> <b>Figure 2:</b> CBR-Large-Wide has better training loss than all three Resnets  </figcaption>
+</figure>
+</div>
+
+Figure 2 suggests that the three Resnets are underfitting the data, compared to the CBR-Large-Wide model. Strangely, Resnet-34 underfits less than Resnet-18 and Resnet-50, suggesting that this phenomenon is not just due to model depth.
+
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
+<figure>
+    <img src="{{ site.baseurl }}/assets/images/MLHC-FA20/train.png" />
+    <figcaption> <b>Figure 3:</b> CBR-Large-Tall has the same training loss as Resnet-18  </figcaption>
+</figure>
+</div>
+
+Strangely, CBR-Large-Tall is only one layer deeper than CBR-Large-Wide but according to figure 3, it has worse training loss than CBR-Large-Wide. Could a single layer tip it off to underfitting?
+
+The ranking in terms of training loss appears to be:
+
+`CBR-Large-Wide > Resnet-34 > CBR-Large-Tall = Resnet-18 > Resnet-50`
+
+
+## Performance versus data
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
+<figure>
+    <img src="{{ site.baseurl }}/assets/images/MLHC-FA20/auc_vs_data.png" />
+    <figcaption> <b>Figure 4:</b> Performance of CBR-Large-Wide as a function of dataset size  </figcaption>
+</figure>
+</div>
+
+As you can see from the above figure, increasing the dataset size leads to better performance, but not by much. Increasing the dataset size from 50,000 to 200,000 increased AUROC by 3.3%. In comparison using a ImageNet pre-trained CBR-Large-Wide increased AUROC by 2%.
+
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
+<figure>
+    <img src="{{ site.baseurl }}/assets/images/MLHC-FA20/auc_vs_params.png" />
+    <img src="{{ site.baseurl }}/assets/images/MLHC-FA20/auc_vs_depth.png" />
+    <figcaption> <b>Figure 5:</b> Performance as a function of model complexity </figcaption>
+</figure>
+</div>
+
+
+Model complexity seems to have no performance on performance on the test set, with the only exception being Resnet-18 which does not scale with data as well as the other models do.
+
+## Transfer Learning from Chest X-rays
+
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
+<figure>
+    <img src="{{ site.baseurl }}/assets/images/MLHC-FA20/auc_vs_data_tf.png" />
+    <figcaption> <b>Figure 6:</b> Performance of the CBR-Large-Wide model as a function of dataset size with transfer learning  </figcaption>
+</figure>
+</div>
+
+The fine-tuned model performs competitively with the model trained from scratch on the datasets of size 50,000 and 100,000, which suggests that an pre-training on an upstream task with a domain more similar to the downstream task does not improve performance. Strangely, test performance on the fine-tuned model sometimes drops with a larger dataset. This suggests that there is some difficulty in fine-tuning a model. Strangely, the frozen-backbone fine-tuned model performs worse than the fine-tuned model, which implies that the backbone does not generalize well. 
+
+
+# Conclusion
+
+
