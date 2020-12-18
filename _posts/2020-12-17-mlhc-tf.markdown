@@ -5,7 +5,7 @@ date:   2020-12-17 14:10:51 +0800
 categories: Deep-Learning
 mathjax: true
 tags: Healthcare Deep-Learning Machine-Learning Pytorch-Lightning Pytorch Python
-description: I investigated the benefit Transfer Learning for Medical Images. This was my course project for NYU's Machine Learning for Healthcare course, taught by Prof. Rajesh Ranganath (<i>NYU</i>).
+description: Recently, it was found that on medical image classification tasks, simple models trained from scratch perform competitively with complex models pre-trained on ImageNet, which is very counter-intuitive. I investigated why this is the case by forming conjectures and validating them through experiments on the CheXpert dataset. This was my project for NYU's Machine Learning for Healthcare course, taught by Prof. Rajesh Ranganath (<i>NYU</i>).
 ---
 
 <style>
@@ -36,23 +36,23 @@ ___
 # Introduction
 <br>
 
-Transfer Learning is a technique used to improve the data efficiency of neural networks. Suppose we want to train a neural network to solve the task of classifying a image as that of a cat or dog, but have very little data. Instead of training a neural network from scratch, we will retrieve a neural network trained to solve a different task (with a huge amount of data), and further train its parameters (fine-tune) to solve our downstream task of classifying an image as that of a cat or dog. This usually leads to better performance, and faster convergence.
+Transfer Learning is a technique used to improve the data efficiency of neural networks. Suppose we want to train a neural network to solve the task of classifying a image as that of a cat or dog, but have very little data. Instead of training a neural network from scratch, we retrieve a neural network trained to solve a different task (with a huge amount of data), and further train its parameters (fine-tune) to solve our downstream task of classifying an image as that of a cat or dog. This usually leads to better performance, and faster convergence.
 
-A recent paper published by Google Brain - titled [Transfusion: Understanding Transfer Learning for Medical Imaging](https://arxiv.org/abs/1902.07208) - found that a small convolutional neural network trained from scratch performs competitively with large neural network that was fine-tuned on the task after being trained on the ImageNet task. This is counter-intuitive because larger neural networks typically outperform small networks on complex task, if sufficient data is available. Since Transfer Learning typically improves data efficiency, one would expect large models pre-trained on a huge amount of data to outperform a small model. I investigated why this was the case. I conducted my experiments of the CheXpert dataset.
+A recent paper titled [Transfusion: Understanding Transfer Learning for Medical Imaging](https://arxiv.org/abs/1902.07208) - published by Google Brain - found that a small convolutional neural network trained from scratch performs competitively with large neural network that was fine-tuned on the task after being trained on the ImageNet task. **This is counter-intuitive because larger neural networks typically outperform small networks on complex task, if sufficient data is available. Since Transfer Learning typically improves data efficiency, one would expect large models pre-trained on a huge amount of data to outperform a small model.** I investigated why this is the case by conducting several experiments on the CheXpert dataset.
 
 ___
 ___
 
-# Investigation
+# Conjectures
 <br>
 
 I formed the following conjectures that might explain the results of the paper:
 
 
-1. **Deep models are too difficult to train:** In the past, deeper models would underfit compared to shallow models. This was counter-intuitive because the set of all models that can be represented by 50-layer neural network is a super set of all the models that can be represented by a 5-layer neural network, as 45 layers could learn the identity function. This was a result of deeper neural networks being more difficult to train than shallow network, and unrelated to the complexity of the models. Training on **unbalanced** datasets of medical images might be too difficult.
-2. **The task is too simple:** Medical images are highly curated and homogeneous, compared to your typical photographs. So perhaps we don't require a complex (large) model to solve the task.
+1. **Deep models are too difficult to train:** In the past, deeper models would underfit compared to shallow models. This was counter-intuitive because a 50-layer neural network is at least as complex as a 5-layer neural network. i.e. the set of all models that can be represented by 50-layer neural network is a super set of all the models that can be represented by a 5-layer neural network, as 45 layers could learn the identity function. This was a result of deeper neural networks being more difficult to train than shallow network, and unrelated to model complexity.
+2. **The task is too simple:** Medical images are highly curated and homogeneous, compared to your typical photographs. So perhaps we don't require a complex model to solve the task.
 3. **More data is not needed:** CheXpert already contains 200,000 images. This is not as large as ImageNet - which contains 14,000,000 images - but perhaps it sufficiently represents the distribution of chest x-rays. As mentioned earlier, medical images are highly curated and more homogeneous.
-4. **Domains are too different:** Perhaps the domain of chest x-rays classification (CheXpert) and photograph classification (ImageNet) are too different, so the weights of a model trained on ImageNet do not transfer well to CheXpert.
+4. **Domains are too different:** Perhaps the domain of chest x-rays classification (CheXpert) and photograph classification (ImageNet) are too different, so a model trained on ImageNet do not transfer well to CheXpert.
 
 ___
 
@@ -91,7 +91,7 @@ Details:
 
 ## Training Difficulty and Task Complexity
 
-Larger models usually lead to better performance on the **training dataset**. I plotted the training curves of the 3 resnet models and the 2 large CBR models. If the task is too simple, then the simple models should have the same training loss and as the complex models. If the deeper models are too difficult to train, then the shallow models should have better training loss 
+Larger models usually lead to better performance on the **training dataset**. I plotted the training curves of the 3 resnet models and the 2 large CBR models. If the task is too simple, then the simple models should have the same training loss and as the complex models. If the deeper models are too difficult to train, then the shallow models should have better training loss than the deeper models.
 
 
 <br>
@@ -104,9 +104,7 @@ Larger datasets usually lead to better performance on the **test dataset**. To i
 
 ## Domain Difference
 
-To investigate the lack of performance improvement is due to the difference in domains of upstream task and downstream task, I trained a CBR-Large-Wide model on the CheXpert Consolidation detection task and fine-tuned it on the Edema detection task. I plotted performance as a function a function of dataset size. I also considered freezing the backbone of the model, and it usually leads to improved performance while using very little data.
-
-
+To investigate whether the lack of performance improvement is due to the difference in domains of upstream task and downstream task, I trained a CBR-Large-Wide model on the CheXpert Consolidation detection task and fine-tuned it on the Edema detection task. I plotted performance as a function a function of dataset size. I also considered freezing the backbone of the model, as it usually leads to improved performance while using very little data.
 
 ___
 ___
@@ -122,11 +120,11 @@ ___
 <div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
 <figure>
     <img src="{{ site.baseurl }}/assets/images/MLHC-FA20/train_peaks.png" />
-    <figcaption> <b>Figure 1:</b> Resnet-50 training loss spikes, indicating unstable training  </figcaption>
+    <figcaption> <b>Figure 1:</b> Resnet-50 training loss spikes up  </figcaption>
 </figure>
 </div>
 
-Figure 1 suggests that training is difficult for Resnet-50.
+Figure 1 suggests that training is difficult for Resnet-50. This could be a result of the dataset being highly class-imbalanced.
 
 <div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
 <figure>
@@ -151,6 +149,7 @@ The ranking in terms of training loss appears to be:
 
 `CBR-Large-Wide > Resnet-34 > CBR-Large-Tall = Resnet-18 > Resnet-50`
 
+<br>
 
 ## Performance versus data
 
@@ -161,7 +160,7 @@ The ranking in terms of training loss appears to be:
 </figure>
 </div>
 
-As you can see from the above figure, increasing the dataset size leads to better performance, but not by much. Increasing the dataset size from 50,000 to 200,000 increased AUROC by 3.3%. In comparison using a ImageNet pre-trained CBR-Large-Wide increased AUROC by 2%.
+According to figure 4, increasing the dataset size leads to better performance, but not by much. Increasing the dataset size from 50,000 to 200,000 increased AUROC by 3.3%. In comparison using a ImageNet pre-trained CBR-Large-Wide increased AUROC by 2%.
 
 
 <div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
@@ -173,7 +172,15 @@ As you can see from the above figure, increasing the dataset size leads to bette
 </div>
 
 
-Model complexity seems to have no performance on performance on the test set, with the only exception being Resnet-18 which does not scale with data as well as the other models do.
+According to figure 5, model complexity seems to have little effect on data scalibility, with the only exception being Resnet-18, which does not scale with data as well as the other models do.
+
+The ranking in terms of performance on validation set appears to be:
+
+`Resnet-50 = CBR-Large-Wide > CBR-Large-Tall = CBR-Small = CBR-Tiny > Resnet-34 > Resnet-18`
+
+Strangely, Resnet-50 performs the worst on the training set, and the best on the validation set. This is counter-intuitive because performance on the training set is usually better than that on the validation set, as the parameters of the model are optimized for the training set. This suggests that the distribution of the validation set is not similar to the distribution of the training set.
+
+<br>
 
 ## Transfer Learning from Chest X-rays
 
@@ -185,9 +192,38 @@ Model complexity seems to have no performance on performance on the test set, wi
 </figure>
 </div>
 
-The fine-tuned model performs competitively with the model trained from scratch on the datasets of size 50,000 and 100,000, which suggests that an pre-training on an upstream task with a domain more similar to the downstream task does not improve performance. Strangely, test performance on the fine-tuned model sometimes drops with a larger dataset. This suggests that there is some difficulty in fine-tuning a model. Strangely, the frozen-backbone fine-tuned model performs worse than the fine-tuned model, which implies that the backbone does not generalize well. 
+According to figure 6, the models pre-trained on CheXpert Edema detection perform competitively with the models trained from scratch on 50,000 and 100,000 data points. This further suggests that dataset size is not longer a bottle-neck in the 50,000 - 200,000 range. However, pre-training did improve performance on 5,000 data-points, implying that the results of the Google Brain paper were partially due to domain difference.
+
+<br>
+
+ Shockingly, validation performance of the fine-tuned model sometimes drops with a larger dataset. This is not the case when training from scratch. One might suspect that the data subset used for fine-tuning was luckier than the one used for training from scratch. But this is not possible as the random split was seeded.
+
+<br>
+
+ Surprisingly, the frozen-backbone fine-tuned model performs worse than the fine-tuned model on 100 datapoints (very little data), which suggests that the backbone does not generalize well.
+
+___
+___
 
 
 # Conclusion
 
+The experiments I conducted suggested that:
 
+1. The difficulty in training complex models is a performance bottle-neck, but depth is not the only factor contributing to the difficulty. The highly class-unbalanced nature of medical image datasets could be a factor contributing to this.
+2. Dataset size is not a performance bottle-neck in the 10,000 - 200,000 data regime.
+3. All considered models scale equally well with more data, with Resnet-18 being the only exception. Further investigation is required to understand why this might be the case.
+4. Pre-trained models may perform worse with more data, but models trained from scratch do not. This is very counter-intuitive and further investigation is required to understand why this might be the case.
+5. Pre-training on a more similar domain does improve performance in the small-data regime, which was not the case while pre-training on ImageNet and transfering to CheXpert.
+
+<br>
+
+Please note that experiments were not as extensive due to computational constraints, and more should be conducted to improve the confidence of these findings.
+
+___
+___
+
+
+# Implementation
+
+**Github repository:** [https://github.com/SohamTamba/HealthcareMachineLearning](https://github.com/SohamTamba/HealthcareMachineLearning) 
