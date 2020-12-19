@@ -40,7 +40,7 @@ The agent has access to the following sensors:
 * 4 cameras
 * 1 lidar
 * 2 radars
-* GNSS, which provides the GPS location of the car
+* GNSS, which provides the location of the car
 * IMU, which provides information regarding the car's inertia
 * Speedometer
 
@@ -140,7 +140,7 @@ We found that our agent does not perform nearly as well as the ones submitted to
     <b>Video 1:</b> Agent driving on a straight road
 </div>
 
-Video 1 illustrates the agent driving on a straight road.
+Video 1 demonstrates the agent driving on a straight road.
 
 <br>
 
@@ -152,7 +152,7 @@ Video 1 illustrates the agent driving on a straight road.
 </div>
 
 
-Video 2 illustrates the agent attempting to take a right turn. It does not turn sharply enough, and hits the side-walk.
+Video 2 demonstrates the agent attempting to take a right turn. It does not turn sharply enough, and hits the side-walk.
 
 # Conclusion
 
