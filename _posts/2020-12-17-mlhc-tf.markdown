@@ -126,28 +126,20 @@ ___
 
 Figure 1 suggests that training is difficult for Resnet-50. This could be a result of the dataset being highly class-imbalanced.
 
-<div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
-<figure>
-    <img src="{{ site.baseurl }}/assets/images/MLHC-FA20/train_no_tall.png" />
-    <figcaption> <b>Figure 2:</b> CBR-Large-Wide has better training loss than all three Resnets  </figcaption>
-</figure>
-</div>
-
-Figure 2 suggests that the three Resnets are underfitting the data, compared to the CBR-Large-Wide model. Strangely, Resnet-34 underfits less than Resnet-18 and Resnet-50, suggesting that this phenomenon is not just due to model depth.
-
 
 <div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
 <figure>
     <img src="{{ site.baseurl }}/assets/images/MLHC-FA20/train.png" />
-    <figcaption> <b>Figure 3:</b> CBR-Large-Tall has the same training loss as Resnet-18  </figcaption>
+    <figcaption> <b>Figure 2:</b> CBR-Large-Tall, CBR-Large-Wide, Resnet-34 have better training loss than Resnet-18, Resnet-50  </figcaption>
 </figure>
 </div>
 
-Strangely, CBR-Large-Tall is only one layer deeper than CBR-Large-Wide but according to figure 3, it has worse training loss than CBR-Large-Wide. Could a single layer tip it off to underfitting?
 
-The ranking in terms of training loss appears to be:
+From figure 2, the ranking in terms of training loss appears to be:
 
-`CBR-Large-Wide > Resnet-34 > CBR-Large-Tall = Resnet-18 > Resnet-50`
+`CBR-Large-Wide = Resnet-34 = CBR-Large-Tall > Resnet-18 = Resnet-50`
+
+Resnet-34 outperforms Resnet-18 and Resnet-50, which suggests that the relative underfitting is not solely due to model depth.
 
 <br>
 
@@ -156,23 +148,23 @@ The ranking in terms of training loss appears to be:
 <div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
 <figure>
     <img src="{{ site.baseurl }}/assets/images/MLHC-FA20/auc_vs_data.png" />
-    <figcaption> <b>Figure 4:</b> Performance of CBR-Large-Wide as a function of dataset size  </figcaption>
+    <figcaption> <b>Figure 3:</b> Performance of CBR-Large-Wide as a function of dataset size  </figcaption>
 </figure>
 </div>
 
-According to figure 4, increasing the dataset size leads to better performance, but not by much. Increasing the dataset size from 50,000 to 200,000 increased AUROC by 3.3%. In comparison using a ImageNet pre-trained CBR-Large-Wide increased AUROC by 2%.
+According to figure 3, increasing the dataset size leads to better performance, but not by much. Increasing the dataset size from 50,000 to 200,000 increased AUROC by 3.3%. In comparison using a ImageNet pre-trained CBR-Large-Wide increased AUROC by 2%.
 
 
 <div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
 <figure>
     <img src="{{ site.baseurl }}/assets/images/MLHC-FA20/auc_vs_params.png" />
     <img src="{{ site.baseurl }}/assets/images/MLHC-FA20/auc_vs_depth.png" />
-    <figcaption> <b>Figure 5:</b> Performance as a function of model complexity </figcaption>
+    <figcaption> <b>Figure 4:</b> Performance as a function of model complexity </figcaption>
 </figure>
 </div>
 
 
-According to figure 5, model complexity seems to have little effect on data scalibility, with the only exception being Resnet-18, which does not scale with data as well as the other models do.
+According to figure 4, model complexity seems to have little effect on data scalibility, with the only exception being Resnet-18, which does not scale with data as well as the other models do.
 
 The ranking in terms of performance on validation set appears to be:
 
@@ -188,11 +180,11 @@ Strangely, Resnet-50 performs the worst on the training set, and the best on the
 <div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
 <figure>
     <img src="{{ site.baseurl }}/assets/images/MLHC-FA20/auc_vs_data_tf.png" />
-    <figcaption> <b>Figure 6:</b> Performance of the CBR-Large-Wide model as a function of dataset size with transfer learning  </figcaption>
+    <figcaption> <b>Figure 5:</b> Performance of the CBR-Large-Wide model as a function of dataset size with transfer learning  </figcaption>
 </figure>
 </div>
 
-According to figure 6, the models pre-trained on CheXpert Edema detection perform competitively with the models trained from scratch on 50,000 and 100,000 data points. This further suggests that dataset size is not longer a bottle-neck in the 50,000 - 200,000 range. However, pre-training did improve performance on 5,000 data-points, implying that the results of the Google Brain paper were partially due to domain difference.
+According to figure 5, the models pre-trained on CheXpert Edema detection perform competitively with the models trained from scratch on 50,000 and 100,000 data points. This further suggests that dataset size is not longer a bottle-neck in the 50,000 - 200,000 range. However, pre-training did improve performance on 5,000 data-points, implying that the results of the Google Brain paper were partially due to domain difference.
 
 <br>
 
