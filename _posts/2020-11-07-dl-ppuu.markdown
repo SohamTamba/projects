@@ -435,11 +435,9 @@ I evaluated the SotA driving agents in terms of distance traveled and its abilit
 </figure>
 </div>
 
-As expected, the performance is very poor, with a peak survival rate of 0.6%. The median distance traveled is approximately 200m, which is the length of a highway stretch. This indicates that a majority of cars crash before the transition from one highway to another is complete.
+As expected, the performance is very poor, with a peak survival rate of 0.6%. At least 20% of the crashes - 40%tile to 60%tile - occur when the car transitions from the end of one highway stretch to the beginning of the second. Recall that a highway stretch is approximately 200m long.
 
 <br>
-
-I then conducted the benchmark while setting the safe zone to the portion of the highway that is visible to the ego car.
 
 
 <div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
@@ -450,4 +448,4 @@ I then conducted the benchmark while setting the safe zone to the portion of the
 </figure>
 </div>
 
-The driving agent achieves a peak survival rate of 20% even with this generous relaxation. 
+The driving agent achieves a peak survival rate of 20%, even with this generous relaxation. 
