@@ -56,7 +56,7 @@ Since NYU's budget and lawyers won't allow us to train an autonomous agent by tr
 1. **I implemented a program to test an agent on a longer highway stretch, using multiple smaller highway stretches.**
 2. **I improved the performance of the driving agent by improving the World Model.**
 
-**This post will describe the latter.**
+**This post will focus on the latter, but touch on the former at the end.**
 
 ___
 ___
@@ -397,3 +397,57 @@ Unless stated otherwise, Thresholded World Models will hence-forth use a cut-off
 It is possible that the final sigmoid activation function of the World Model likely biases it in a manner that hurts the performance of the driving agent. Firstly, it causes a discreprency in pixel values since true images have binary pixel values and sigmoid is biased against binary values. Secondly, since sigmoid has lesser gradient at its extreme points, the agent trained in the World Model may rely on the soft pixels at the edge of the car to choose its actions. 
 
 Thresholding the output of the World Model - which effectively modifies the final activation function - improved the performance of the driving agent, but it is worth noting that the performance of an agent varies with the training steps, hyperparameters and random seed, so it is difficult to judge its statistical significance.
+
+
+# Infinite Testing
+<br>
+
+In this section, I will briefly touch upon the contributions I made regarding the testing methodology. Previously, the performance on an agent was judged by the frequency with which it navigated through a 200m highway stretch. I developed software to combine multiple highway stretches so the car entered the next stretch after completing the current one. The main challenge was ensuring consistency when the car leaves one stretch and enters the other. The main issue I faced is that the data is noisy at the highway end-points: Cars appear and disappear abruptly.
+
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
+<figure>
+    <img src="{{ site.baseurl }}/assets/images/PPUU/before.png" />
+    <figcaption> Snapshot of the highway after the ego car (blue) recently entered it </figcaption>
+</figure>
+</div>
+
+<br>
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
+<figure>
+    <img src="{{ site.baseurl }}/assets/images/PPUU/after.png" />
+    <figcaption> A background car (green) appears at the same location as the ego car </figcaption>
+</figure>
+</div>
+
+The ego car is near the top left corner of the image with a white circle drawn around it. As you can see from the above figure, a crash occured due to the noise in the pre-recorded trajectories. To remedy, this create a safe zone around the ego car. If a background car abruptly appears inside a safe zone, then the car will be invisible to the ego car and colliding with it will not result in a crash, until it leaves the safe zone.
+<br>
+
+I evaluated the SotA driving agents in terms of distance traveled and its ability to avoid crashing 5 minutes (3,000 time steps). I initially set the safe zone to the space occupied by the ego car.
+
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
+<figure>
+    <img src="{{ site.baseurl }}/assets/images/PPUU/dist_safety=0.0.jpg" />
+    <img src="{{ site.baseurl }}/assets/images/PPUU/survival_safety=0.0.jpg" />
+    <figcaption> Performance of driving agent as a function of training steps with a minimal safe zone </figcaption>
+</figure>
+</div>
+
+As expected, the performance is very poor, with a peak survival rate of 0.6%. The median distance traveled is approximately 200m, which is the length of a highway stretch. This indicates that a majority of cars crash before the transition from one highway to another is complete.
+
+<br>
+
+I then conducted the benchmark while setting the safe zone to the portion of the highway that is visible to the ego car.
+
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
+<figure>
+    <img src="{{ site.baseurl }}/assets/images/PPUU/dist_safety=1.0.jpg" />
+    <img src="{{ site.baseurl }}/assets/images/PPUU/survival_safety=1.0.jpg" />
+    <figcaption> Performance of driving agent as a function of training steps with the entire context of the car as a safe zone </figcaption>
+</figure>
+</div>
+
+The driving agent achieves a peak survival rate of 20% even with this generous relaxation. 
