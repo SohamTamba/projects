@@ -428,7 +428,7 @@ The ego car is near the top left corner of the image with a white circle drawn a
 <div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
 <figure>
     <img src="{{ site.baseurl }}/assets/images/PPUU/inf-test.gif" />
-    <figcaption><b> Cars that appear near the ego car (blue) are ignored (white) </b> </figcaption>
+    <figcaption><b> Demo: Cars that abruptly appear near the ego car (blue) are ignored (white) </b> </figcaption>
 </figure>
 </div>
 <br>
