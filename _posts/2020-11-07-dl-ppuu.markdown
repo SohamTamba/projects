@@ -424,6 +424,16 @@ In this section, I will briefly touch upon the contributions I made regarding th
 The ego car is near the top left corner of the image with a white circle drawn around it. As you can see from the above figure, a crash occured due to the noise in the pre-recorded trajectories. To remedy, this create a safe zone around the ego car. If a background car abruptly appears inside a safe zone, then the car will be invisible to the ego car and colliding with it will not result in a crash, until it leaves the safe zone.
 <br>
 
+
+<div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
+<figure>
+    <img src="{{ site.baseurl }}/assets/images/PPUU/inf-test.gif" />
+    <figcaption><b> Cars that appear near the ego car (blue) are ignored (white) </b> </figcaption>
+</figure>
+</div>
+<br>
+
+
 I evaluated the SotA driving agents in terms of distance traveled and its ability to avoid crashing 5 minutes (3,000 time steps). I initially set the safe zone to the space occupied by the ego car.
 
 

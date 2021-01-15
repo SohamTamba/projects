@@ -19,6 +19,7 @@ description: The CARLA Challenge involves training an agent to drive a car in th
 
 Training an neural network agent to solve a task in an environment end-to-end is usually very data inefficient. One usually requires samples of the order of $10^5$ to solve even a simple task, such as [Bipedal Walker](http://gym.openai.com/envs/BipedalWalkerHardcore-v2/). A possible solution to this issue is to leverage unsupervised pre-training to train the model backbone prior to training the model. Recent methods have found success in applying these techniques to solve simple tasks with less data, so we hoped to do the same for a complex task, which is the CARLA Challenge. Current solution to the CARLA Challenge - among the ones published - rely on privelleged information provided by the simulator to train an agent, such as the location of all traffic lights. We attempt to solve the task without this information.
 
+Unfortunately, we under-estimated the difficulty of this task and could not conduct much experimentation within the deadline.
 
 <br>
 
@@ -95,7 +96,7 @@ We initially trained a Resnet-50 backbone, but found that it was too large to ru
 
 ## CARLA Training
 
-We trained a MLP on top of the backbone mentioned above to predict where the auto-pilot would move the car to for each of the 8 possible high-level commands. We trained another simple MLP to output the 3 actions of the agent, with target displacement, current inertia and speed as its input.
+We trained a MLP on top of the backbone mentioned above to predict where the auto-pilot would move the car to for each of the 8 possible high-level commands. We trained another simple MLP to output the 3 actions of the agent, with target displacement, current inertia and speed as its input. This is similar to the algorithm used by [2].
 
 
 <div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
