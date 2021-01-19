@@ -5,7 +5,7 @@ date:   2020-12-17 14:10:51 +0800
 categories: Deep-Learning
 mathjax: true
 tags: Healthcare Deep-Learning Machine-Learning Pytorch-Lightning Pytorch Python
-description: Recently, it was found foe medical image classification tasks, simple models trained from scratch perform competitively with complex models pre-trained on ImageNet, which is counter-intuitive. I investigated why this is the case by forming conjectures and validating them through experiments on the CheXpert dataset. This was my project for NYU's Machine Learning for Healthcare course, taught by Prof. Rajesh Ranganath (<i>NYU</i>).
+description: Recently, it was found for medical image classification tasks, simple models trained from scratch perform competitively with complex models pre-trained on ImageNet, which is counter-intuitive. I investigated why this is the case by forming conjectures and validating them through experiments on the CheXpert dataset for the task of detecting a Lung Disease. This was my project for NYU's Machine Learning for Healthcare course, taught by Prof. Rajesh Ranganath (<i>NYU</i>).
 ---
 
 <style>
