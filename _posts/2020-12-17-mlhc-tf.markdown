@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Transfer Learning for Medical Images"
+title:  "Pretraining for Medical Imaging"
 date:   2020-12-17 14:10:51 +0800
 categories: Deep-Learning
 mathjax: true
