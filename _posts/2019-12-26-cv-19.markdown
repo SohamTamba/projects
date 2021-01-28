@@ -1,11 +1,11 @@
 ---
 layout: post
-title:  "Boost Self-supervised Learning with Adversarial Noise"
+title:  "Improve Unsupervised Pretraining with Adversarial Noise"
 date:   2019-12-26 14:10:51 +0800
 categories: Deep-Learning
 mathjax: true
 tags: Computer-Vision Deep-Learning Machine-Learning Pytorch Python Unsupervised-Learning Self-supervised-Learning Adversarial-Trainig
-description: I explored the possibility of improving self-supervised learning pre-text tasks using adversarial noise. The goal of this project was to contribute towards <b>data efficient Deep Learning for computer vision tasks</b>. This was my project for NYU's Computer Vision course, taught by Prof. Rob Fergus (<i>Deepmind</i>, <i>NYU</i>).
+description: I explored the possibility of improving unsupervised pretraining through <b>self-supervised pre-text tasks</b> using adversarial noise. The goal of this project was to contribute towards <b>data efficient Deep Learning for Computer Vision tasks</b>. This was my project for NYU's Computer Vision course, taught by Prof. Rob Fergus (<i>Deepmind</i>, <i>NYU</i>).
 ---
 
 <style>
