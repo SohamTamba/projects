@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Decoupling Representation Learning for Autonomous Driving"
+title:  "Autonomous Driving with Decoupled Representation Learning"
 date:   2020-12-11 14:10:51 +0800
 categories: Deep-Learning
 mathjax: true
