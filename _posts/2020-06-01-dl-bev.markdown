@@ -1,11 +1,11 @@
 ---
 layout: post
-title:  "Data Efficient Bird's Eye View Prediction"
+title:  "Bird Eye View Estimation with limited data"
 date:   2020-06-01 14:10:51 +0800
 categories: Deep-Learning
 mathjax: true
 tags: Autonomous-Vehicles Computer-Vision Deep-Learning Machine-Learning Pytorch Python Unsupervised-Learning Self-supervised-Learning
-description: I tackled the problem of Bird's Eye View Prediction - a crucial task for <b>autonomous vehicles</b> - with very little annotated data, and a moderate amount of unannotated data. This was my project for NYU's Deep Learning course, taught by Prof. Yann Lecun (<i>Facebook AI Research</i>, <i>NYU</i>) and Prof. Alfredo Canziani (<i>NYU</i>).
+description: I tackled the problem of Bird Eye View Prediction - a crucial task for <b>autonomous vehicles</b> - with very little annotated data, and a moderate amount of unannotated data. This was my project for NYU's Deep Learning course, taught by Prof. Yann Lecun (<i>Facebook AI Research</i>, <i>NYU</i>) and Prof. Alfredo Canziani (<i>NYU</i>).
 ---
 
 
@@ -19,9 +19,9 @@ ___
 
 # Introduction
 
-**Autonomous vehicles need to estimate its surroundings to plan a safe and efficient route to its destination. The task of Bird's Eye View Prediction involves generating a segmentation map of the road and bounding boxes around certain objects - such as cars - as seen from a helicopter above the car.**
+**Autonomous vehicles need to estimate its surroundings to plan a safe and efficient route to its destination. The task of Bird Eye View Prediction involves generating a segmentation map of the road and bounding boxes around certain objects - such as cars - as seen from a helicopter above the car.**
 
-During the Spring of 2020, I was enrolled in NYU's *Deep Learning course*, taught by Prof. *Yann Lecun* and Prof. *Alfredo Canziani*. The course project was a competition to develop a model that solves the problem of Bird's Eye View Estimation on a novel dataset. 
+During the Spring of 2020, I was enrolled in NYU's *Deep Learning course*, taught by Prof. *Yann Lecun* and Prof. *Alfredo Canziani*. The course project was a competition to develop a model that solves the problem of Bird Eye View Estimation on a novel dataset. 
 
 In our project, we focused on leveraging **camera geometry** and **unsupervised depth estimation** to construct a "top view representation" of a scene from multiple pictures of the scene. The project was released in the last 4 weeks of the semester, so we had to solve it under significant time constraints.
 
@@ -29,7 +29,7 @@ In our project, we focused on leveraging **camera geometry** and **unsupervised 
 
 ## Datset
 
-The input is 6 pictures of a scene taken from 6 cameras mounted on top of the car, such that adjacent cameras are at an angle of 60 degrees to each other. The target is a bird's eye view, as mentioned above.
+The input is 6 pictures of a scene taken from 6 cameras mounted on top of the car, such that adjacent cameras are at an angle of 60 degrees to each other. The target is a bird eye view, as mentioned above.
 
 <div style="background-color:rgba(0, 0, 0, 0.2470588); text-align:center; vertical-align: middle; padding:29px 0;">
 <figure>
@@ -42,7 +42,7 @@ The input is 6 pictures of a scene taken from 6 cameras mounted on top of the ca
 
 A journey consists of 126 scenes of a car's journey. The dataset is divided into 2 sections:
 1. **Unannotated Dataset:** 106 journeys, with each datapoint containing the 6 images.
-2. **Annotated DataSet:** 28 journeys, with each frame containing the 6 images and its corresponding bird's eye view.
+2. **Annotated DataSet:** 28 journeys, with each frame containing the 6 images and its corresponding bird eye view.
 
 A model is not allowed to use preceeding frames during inference. The annotated dataset contains only 2,968 data points. It is infeasible to train a deep neural network using this set alone; The unannotated dataset must also be used, perhaps through self-supervised or semi-supervised learning.
 
@@ -57,12 +57,12 @@ As stated above, we focused on leveraging **camera geometry** and **unsupervised
 
 ## Logic
 
-**Fully convolutional neural networks (FCNN) achieve state-of-the-art performance for typical semantic segmentation and object detection tasks. The main reason for this is the spatial correspondence between the input and output. This leads to the properties of stationarity and locality between input/output pairs, which the 2D convolutional layers of a FCNN exploit. The task of Bird's Eye View Prediction does not possess these properties.** To describe these properties in brief wrt. image segmentation:
+**Fully convolutional neural networks (FCNN) achieve state-of-the-art performance for typical semantic segmentation and object detection tasks. The main reason for this is the spatial correspondence between the input and output. This leads to the properties of stationarity and locality between input/output pairs, which the 2D convolutional layers of a FCNN exploit. The task of Bird Eye View Prediction does not possess these properties.** To describe these properties in brief wrt. image segmentation:
 
 1.  **Locality:** The correlation between input[$i$, $j$] & output[$i+\Delta x$, $j+\Delta y$] decreases as $\vert \Delta x\vert$ or $\vert \Delta  y\vert$ increases. **For example**, the correlation between input[20, 30] & output[21, 31] is more than the correlation between input[20, 30] & output[120, 130]. FCNN **exploit** this by using convolutional layers with a small kernel size.
 2. **Stationarity:** The correlation between input[$i_1$, $j_1$] & output[$i_2$, $j_2$] is the same as the correlation between input[$i_1+\Delta x$, $j_1+\Delta y$] & output[$i_2+\Delta x$, $j_2+\Delta y$]. **For example**, the correlation between input[20, 30] & output[40, 50] is similar same as the correlational between input[21, 37] & output[41, 57]. FCNN **exploit** this through the translational invariance property of convolution operations.
 
-It is easy to notice that unlike image segmentation, bird's eye view prediction does not have these properties. 
+It is easy to notice that unlike image segmentation, bird eye view prediction does not have these properties. 
 
 Now let us consider a simpler task to motivate our logic: *Rotated Image Segmentation*. In this task, the input is an image rotated by some unknown angle. The goal is to generate a segmentation mask of the image before it was rotated.
 
@@ -122,7 +122,7 @@ The model is divided into 5 sub-models:
 
 ### Image Encoder
 
-We decided to use self-supervised learning **(SSL)** to pre-train an image encoder. The image encoder is used to generate a more meaningful representation of the 6 input images. We decided to train the encoder on the jigsaw pretext task. The motivation behind this decision is that the target of the downstream task (Bird's Eye View Prediction) is sensitive to the patch-shuffling transformation of jigsaw. **Hence, the feature extractor obtained from jigsaw pretraining - whose image representations are covariate to this shuffling transform - might be useful for this task**.
+We decided to use self-supervised learning **(SSL)** to pre-train an image encoder. The image encoder is used to generate a more meaningful representation of the 6 input images. We decided to train the encoder on the jigsaw pretext task. The motivation behind this decision is that the target of the downstream task (Bird Eye View Prediction) is sensitive to the patch-shuffling transformation of jigsaw. **Hence, the feature extractor obtained from jigsaw pretraining - whose image representations are covariate to this shuffling transform - might be useful for this task**.
 
 <br>
 
